@@ -3,85 +3,89 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>EletronicFix | ERP Professional</title>
+    <title>EletronicFix ERP | Sistema Profissional</title>
     <link href="https://cdn.jsdelivr.net/npm/daisyui@4.4.19/dist/full.min.css" rel="stylesheet" type="text/css" />
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     
     <style>
-        :root { 
-            --p: 82 85% 62%; /* Verde Lima */
-            --s: 24 95% 53%; /* Laranja */
-        }
-        body { background-color: #f8fafc; color: #1e293b; font-family: 'Inter', sans-serif; }
+        :root { --p: 82 85% 62%; --s: 24 95% 53%; }
+        body { background-color: #f8fafc; color: #1e293b; font-family: 'Inter', sans-serif; overflow-x: hidden; }
         .sidebar-bg { background-color: #0f172a; }
         .sidebar-active { background-color: rgba(179, 242, 77, 0.15); color: #b3f24d; border-left: 4px solid #b3f24d; }
         .page-section { display: none; }
         .page-section.active { display: block; }
-        .card-fix { background: white; border: 1px solid #e2e8f0; border-radius: 1rem; }
-        
-        /* Badges de Status */
+        .card-dash { cursor: pointer; transition: 0.2s; background: white; border: 1px solid #e2e8f0; border-radius: 1rem; }
+        .card-dash:hover { transform: translateY(-3px); box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); }
         .badge-aberta { background-color: #f97316; color: white; border: none; font-weight: bold; }
         .badge-finalizada { background-color: #b3f24d; color: #064e3b; border: none; font-weight: bold; }
-        
-        /* Ajuste de Modais para ficarem completos */
-        .modal-box { max-height: 95vh; padding: 2rem; border-radius: 1.5rem; }
+        .modal-box { max-height: 95vh; border-radius: 1.5rem; padding: 0; }
+        @media (max-width: 768px) { .modal-box { width: 95%; margin: 10px; } }
     </style>
 </head>
 <body class="min-h-screen">
 
     <div class="drawer lg:drawer-open">
         <input id="my-drawer" type="checkbox" class="drawer-toggle" />
-        
         <div class="drawer-content flex flex-col">
-            <main class="p-6 md:p-10">
+            <div class="lg:hidden navbar bg-slate-900 text-white flex justify-between px-4">
+                <span class="font-black italic text-xl text-[#b3f24d]">EletronicFix</span>
+                <label for="my-drawer" class="btn btn-ghost drawer-button">☰</label>
+            </div>
+
+            <main class="p-4 md:p-10">
                 <section id="sec-dash" class="page-section active">
-                    <h1 class="text-4xl font-black mb-10 text-slate-800 italic uppercase">Resumo EletronicFix</h1>
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
-                        <div class="stats card-fix border-t-8 border-orange-500 shadow-lg">
-                            <div class="stat">
-                                <div class="stat-title text-orange-600 font-bold uppercase text-sm">O.S Abertas</div>
-                                <div class="stat-value text-orange-600" id="dash-abertas">0</div>
-                            </div>
+                    <h1 class="text-3xl font-black mb-10 text-slate-800 italic uppercase">Dashboard Administrativo</h1>
+                    <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+                        <div class="stats card-dash border-t-8 border-orange-500" onclick="switchPage('sec-os')">
+                            <div class="stat"><div class="stat-title text-orange-600 font-bold uppercase text-xs">O.S Abertas</div><div class="stat-value text-orange-600" id="dash-abertas">0</div></div>
                         </div>
-                        <div class="stats card-fix border-t-8 border-green-500 shadow-lg">
-                            <div class="stat">
-                                <div class="stat-title text-green-600 font-bold uppercase text-sm">O.S Finalizadas</div>
-                                <div class="stat-value text-green-600" id="dash-finalizadas">0</div>
-                            </div>
+                        <div class="stats card-dash border-t-8 border-green-500" onclick="switchPage('sec-os')">
+                            <div class="stat"><div class="stat-title text-green-600 font-bold uppercase text-xs">O.S Finalizadas</div><div class="stat-value text-green-600" id="dash-finalizadas">0</div></div>
+                        </div>
+                        <div class="stats card-dash border-t-8 border-blue-500" onclick="switchPage('sec-financeiro')">
+                            <div class="stat"><div class="stat-title text-blue-600 font-bold uppercase text-xs">Saldo em Caixa</div><div class="stat-value text-blue-600" id="dash-saldo">R$ 0,00</div></div>
+                        </div>
+                        <div class="stats card-dash border-t-8 border-purple-500" onclick="switchPage('sec-produtos')">
+                            <div class="stat"><div class="stat-title text-purple-600 font-bold uppercase text-xs">Estoque Alerta</div><div class="stat-value text-purple-600" id="dash-estoque">0</div></div>
                         </div>
                     </div>
                 </section>
 
                 <section id="sec-clientes" class="page-section">
                     <div class="flex justify-between items-center mb-8">
-                        <h1 class="text-3xl font-black text-slate-800 uppercase italic">Gestão de Clientes</h1>
-                        <button class="btn bg-[#b3f24d] hover:bg-[#a2db45] border-none text-slate-900 font-black px-8" onclick="prepararNovoCliente()">+ NOVO CLIENTE</button>
+                        <h1 class="text-2xl font-black text-slate-800 uppercase italic">Gestão de Clientes</h1>
+                        <button class="btn bg-[#b3f24d] border-none text-slate-900 font-black" onclick="prepararNovoCliente()">+ NOVO CLIENTE</button>
                     </div>
-                    <div class="card card-fix shadow-md overflow-x-auto">
-                        <table class="table w-full">
-                            <thead class="bg-slate-50 text-slate-500">
-                                <tr><th>ID</th><th>NOME</th><th>WHATSAPP</th><th class="text-center">AÇÕES</th></tr>
-                            </thead>
-                            <tbody id="lista-clientes" class="font-medium"></tbody>
-                        </table>
-                    </div>
+                    <div class="bg-white rounded-2xl shadow-sm border overflow-x-auto"><table class="table w-full"><thead><tr><th>ID</th><th>NOME</th><th>WHATSAPP</th><th class="text-center">AÇÕES</th></tr></thead><tbody id="lista-clientes"></tbody></table></div>
                 </section>
 
                 <section id="sec-os" class="page-section">
                     <div class="flex justify-between items-center mb-8">
-                        <h1 class="text-3xl font-black text-slate-800 uppercase italic">Ordens de Serviço</h1>
-                        <button class="btn bg-[#b3f24d] hover:bg-[#a2db45] border-none text-slate-900 font-black px-8" onclick="prepararNovaOS()">+ NOVA OS</button>
+                        <h1 class="text-2xl font-black text-slate-800 uppercase italic">Ordens de Serviço</h1>
+                        <button class="btn bg-[#b3f24d] border-none text-slate-900 font-black" onclick="prepararNovaOS()">+ NOVA OS</button>
                     </div>
-                    <div class="card card-fix shadow-md overflow-x-auto">
-                        <table class="table w-full">
-                            <thead class="bg-slate-50 text-slate-500">
-                                <tr><th>Nº OS</th><th>CLIENTE</th><th>APARELHO</th><th>STATUS</th><th class="text-center">AÇÕES</th></tr>
-                            </thead>
-                            <tbody id="lista-os" class="font-medium"></tbody>
-                        </table>
+                    <div class="bg-white rounded-2xl shadow-sm border overflow-x-auto"><table class="table w-full"><thead><tr><th>Nº OS</th><th>CLIENTE</th><th>APARELHO</th><th>STATUS</th><th class="text-center">AÇÕES</th></tr></thead><tbody id="lista-os"></tbody></table></div>
+                </section>
+
+                <section id="sec-produtos" class="page-section">
+                    <div class="flex justify-between items-center mb-8">
+                        <h1 class="text-2xl font-black text-slate-800 uppercase italic">Estoque de Produtos</h1>
+                        <button class="btn bg-[#b3f24d] border-none text-slate-900 font-black" onclick="prepararNovoProduto()">+ NOVO PRODUTO</button>
                     </div>
+                    <div class="bg-white rounded-2xl shadow-sm border overflow-x-auto"><table class="table w-full"><thead><tr><th>SKU</th><th>NOME</th><th>MARCA</th><th>ESTOQUE</th><th>PREÇO VENDA</th><th class="text-center">AÇÕES</th></tr></thead><tbody id="lista-produtos"></tbody></table></div>
+                </section>
+
+                <section id="sec-financeiro" class="page-section">
+                    <div class="flex justify-between items-center mb-8">
+                        <h1 class="text-2xl font-black text-slate-800 uppercase italic">Fluxo Financeiro</h1>
+                        <div class="flex gap-2">
+                            <button class="btn bg-red-500 text-white border-none font-black" onclick="abrirModalFin('Saída')">- SAÍDA</button>
+                            <button class="btn bg-green-500 text-white border-none font-black" onclick="abrirModalFin('Entrada')">+ ENTRADA</button>
+                        </div>
+                    </div>
+                    <div class="bg-white rounded-2xl shadow-sm border overflow-x-auto"><table class="table w-full"><thead><tr><th>DATA</th><th>TIPO</th><th>CATEGORIA</th><th>VALOR</th><th>DESCRIÇÃO</th></tr></thead><tbody id="lista-financeiro"></tbody></table></div>
                 </section>
             </main>
         </div>
@@ -89,13 +93,13 @@
         <div class="drawer-side z-20">
             <label for="my-drawer" class="drawer-overlay"></label>
             <aside class="sidebar-bg w-72 min-h-full flex flex-col text-white">
-                <div class="p-8 border-b border-slate-800 text-center">
-                    <img src="logo.png" class="h-32 mx-auto object-contain mb-2">
-                </div>
+                <div class="p-8 border-b border-slate-800 text-center"><img src="logo.png" class="h-28 mx-auto object-contain"></div>
                 <ul class="menu p-4 gap-2 font-bold mt-4">
                     <li><a href="#" onclick="switchPage('sec-dash')" id="nav-dash" class="sidebar-active">📊 DASHBOARD</a></li>
                     <li><a href="#" onclick="switchPage('sec-clientes')" id="nav-clientes">👥 CLIENTES</a></li>
                     <li><a href="#" onclick="switchPage('sec-os')" id="nav-os">🛠️ ORDENS DE SERVIÇO</a></li>
+                    <li><a href="#" onclick="switchPage('sec-produtos')" id="nav-produtos">📦 ESTOQUE/PEÇAS</a></li>
+                    <li><a href="#" onclick="switchPage('sec-financeiro')" id="nav-financeiro">💰 FINANCEIRO</a></li>
                 </ul>
             </aside>
         </div>
@@ -103,53 +107,72 @@
 
     <dialog id="modal_cliente" class="modal">
         <div class="modal-box w-11/12 max-w-4xl bg-white">
-            <h3 class="font-black text-2xl text-slate-800 mb-8 border-b pb-4" id="titulo-modal-cliente">Cadastro de Cliente</h3>
-            <form id="form-cliente" onsubmit="salvarCliente(event)" class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <input type="hidden" id="c-id" value="">
+            <div class="p-6 border-b flex justify-between items-center bg-slate-50"><h3 class="font-black text-2xl uppercase">Cadastro de Cliente</h3><button class="btn btn-sm btn-circle btn-ghost" onclick="modal_cliente.close()">✕</button></div>
+            <form id="form-cliente" onsubmit="salvarCliente(event)" class="p-8 grid grid-cols-1 md:grid-cols-2 gap-6">
+                <input type="hidden" id="c-id">
+                <div class="col-span-full border-b pb-2"><h4 class="font-bold text-xs uppercase text-orange-500 tracking-widest">Dados Pessoais</h4></div>
                 <input type="text" id="c-nome" placeholder="Nome Completo *" class="input input-bordered w-full" required />
                 <input type="text" id="c-whatsapp" placeholder="WhatsApp" class="input input-bordered w-full" oninput="maskWhatsApp(this)" maxlength="15" />
                 <input type="text" id="c-cpf" placeholder="CPF/CNPJ" class="input input-bordered w-full" oninput="maskCPF(this)" maxlength="18" />
                 <input type="email" id="c-email" placeholder="E-mail" class="input input-bordered w-full" />
+                <div class="col-span-full border-b pb-2 mt-4"><h4 class="font-bold text-xs uppercase text-orange-500 tracking-widest">Endereço</h4></div>
                 <input type="text" id="c-cep" placeholder="CEP" class="input input-bordered" oninput="maskCEP(this)" maxlength="9" onblur="buscarCep(this.value)" />
                 <input type="text" id="c-cidade" placeholder="Cidade" class="input input-bordered" />
                 <input type="text" id="c-rua" placeholder="Rua" class="input input-bordered" />
-                <input type="text" id="c-numero" placeholder="Nº" class="input input-bordered" />
-                <div class="modal-action col-span-full border-t pt-6">
-                    <button type="button" class="btn" onclick="modal_cliente.close()">Cancelar</button>
-                    <button type="submit" class="btn bg-[#b3f24d] hover:bg-[#a2db45] text-slate-900 border-none px-10 font-black">Salvar Cliente</button>
-                </div>
+                <div class="grid grid-cols-2 gap-4"><input type="text" id="c-numero" placeholder="Nº" class="input input-bordered" /><input type="text" id="c-uf" placeholder="UF" class="input input-bordered" /></div>
+                <div class="modal-action col-span-full border-t pt-6"><button type="button" class="btn" onclick="modal_cliente.close()">Cancelar</button><button type="submit" class="btn bg-[#b3f24d] font-black uppercase">Salvar Cliente</button></div>
+            </form>
+        </div>
+    </dialog>
+
+    <dialog id="modal_produto" class="modal">
+        <div class="modal-box bg-white">
+            <div class="p-6 border-b bg-slate-50 font-black uppercase">Detalhes do Produto</div>
+            <form id="form-produto" onsubmit="salvarProduto(event)" class="p-8 space-y-4">
+                <input type="hidden" id="p-id">
+                <input type="text" id="p-nome" placeholder="Nome do Produto/Peça *" class="input input-bordered w-full" required />
+                <div class="grid grid-cols-2 gap-4"><input type="text" id="p-marca" placeholder="Marca" class="input input-bordered" /><input type="text" id="p-cat" placeholder="Categoria" class="input input-bordered" /></div>
+                <div class="grid grid-cols-2 gap-4"><input type="number" id="p-custo" placeholder="Preço Custo R$" class="input input-bordered" step="0.01" /><input type="number" id="p-venda" placeholder="Preço Venda R$" class="input input-bordered" step="0.01" /></div>
+                <div class="grid grid-cols-2 gap-4"><input type="number" id="p-estoque" placeholder="Qtd. Atual" class="input input-bordered" /><input type="number" id="p-min" placeholder="Qtd. Mínima" class="input input-bordered" /></div>
+                <div class="modal-action"><button type="button" class="btn" onclick="modal_produto.close()">Cancelar</button><button type="submit" class="btn bg-[#b3f24d] font-black uppercase">Salvar no Estoque</button></div>
+            </form>
+        </div>
+    </dialog>
+
+    <dialog id="modal_financeiro" class="modal">
+        <div class="modal-box bg-white">
+            <div class="p-6 border-b bg-slate-50 font-black uppercase" id="fin-titulo">Lançamento Financeiro</div>
+            <form id="form-financeiro" onsubmit="salvarFinanceiro(event)" class="p-8 space-y-4">
+                <input type="hidden" id="fin-tipo">
+                <select id="fin-pag" class="select select-bordered w-full font-bold"><option value="Dinheiro">Dinheiro</option><option value="PIX">PIX</option><option value="Cartão">Cartão</option></select>
+                <input type="text" id="fin-cat-manual" placeholder="Categoria (Ex: Aluguel, Peças, Energia)" class="input input-bordered w-full" required />
+                <input type="number" id="fin-valor" placeholder="Valor R$" class="input input-bordered w-full" step="0.01" required />
+                <textarea id="fin-desc" placeholder="Observações/Descrição" class="textarea textarea-bordered w-full"></textarea>
+                <div class="modal-action"><button type="button" class="btn" onclick="modal_financeiro.close()">Cancelar</button><button type="submit" class="btn bg-[#b3f24d] font-black uppercase">Confirmar Lançamento</button></div>
             </form>
         </div>
     </dialog>
 
     <dialog id="modal_os" class="modal">
         <div class="modal-box w-11/12 max-w-2xl bg-white">
-            <h3 class="font-black text-2xl text-slate-800 mb-8 border-b pb-4" id="titulo-modal-os">Nova Ordem de Serviço</h3>
-            <form id="form-os" onsubmit="salvarOS(event)" class="space-y-6">
-                <input type="hidden" id="os-id" value="">
-                <select id="os-cliente" class="select select-bordered w-full font-bold" required></select>
+            <div class="p-6 border-b font-black text-slate-800 uppercase" id="titulo-modal-os">Ordem de Serviço</div>
+            <form id="form-os" onsubmit="salvarOS(event)" class="p-8 space-y-6">
+                <input type="hidden" id="os-id"><select id="os-cliente" class="select select-bordered w-full font-bold" required></select>
                 <input type="text" id="os-equipamento" placeholder="Aparelho / Equipamento" class="input input-bordered w-full" required />
                 <textarea id="os-defeito" placeholder="Defeito Relatado" class="textarea textarea-bordered w-full h-24" required></textarea>
-                <div class="grid grid-cols-3 gap-4">
-                    <select id="os-status-form" class="select select-bordered w-full font-bold">
-                        <option value="Aberta">Aberta</option>
-                        <option value="Finalizada">Finalizada</option>
-                    </select>
-                    <input type="number" id="os-valor" placeholder="Valor R$" class="input input-bordered" step="0.01" />
-                    <input type="number" id="os-garantia" placeholder="Garantia" class="input input-bordered" value="90" />
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <select id="os-status-form" class="select select-bordered w-full font-bold"><option value="Aberta">Aberta</option><option value="Finalizada">Finalizada</option></select>
+                    <input type="number" id="os-valor" placeholder="Valor Reparo R$" class="input input-bordered" step="0.01" /><input type="number" id="os-garantia" placeholder="Garantia" class="input input-bordered" value="90" />
                 </div>
-                <div class="modal-action border-t pt-6">
-                    <button type="button" class="btn" onclick="modal_os.close()">Cancelar</button>
-                    <button type="submit" class="btn bg-[#b3f24d] hover:bg-[#a2db45] text-slate-900 border-none px-10 font-black">Salvar O.S</button>
-                </div>
+                <div class="modal-action"><button type="button" class="btn btn-ghost" onclick="modal_os.close()">Voltar</button><button type="submit" class="btn bg-[#b3f24d] text-slate-900 border-none px-10 font-black uppercase">Confirmar O.S</button></div>
             </form>
         </div>
     </dialog>
 
     <script>
-        const SUPABASE_URL = 'https://tiwolqggaatrrpuahsvu.supabase.co'
-        const SUPABASE_KEY = 'sb_publishable_ro9Yx3P9H-nM9Vgt0lA6eg_Eoo_1Qqq'
-        const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY)
+        const SUPABASE_URL = 'https://tiwolqggaatrrpuahsvu.supabase.co';
+        const SUPABASE_KEY = 'sb_publishable_ro9Yx3P9H-nM9Vgt0lA6eg_Eoo_1Qqq';
+        const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
         function maskWhatsApp(v) { v.value = v.value.replace(/\D/g, "").replace(/^(\d{2})(\d)/g, "($1) $2").replace(/(\d{5})(\d)/, "$1-$2"); }
         function maskCPF(v) { v.value = v.value.replace(/\D/g, "").replace(/(\d{3})(\d)/, "$1.$2").replace(/(\d{3})(\d)/, "$1.$2").replace(/(\d{3})(\d{1,2})$/, "$1-$2"); }
@@ -159,111 +182,90 @@
             document.querySelectorAll('.page-section').forEach(s => s.classList.remove('active'));
             document.getElementById(p).classList.add('active');
             document.querySelectorAll('.sidebar-active').forEach(a => a.classList.remove('sidebar-active'));
-            document.getElementById('nav-' + p.split('-')[1]).classList.add('sidebar-active');
+            const navId = 'nav-' + p.split('-')[1];
+            if(document.getElementById(navId)) document.getElementById(navId).classList.add('sidebar-active');
             atualizarDados();
+            if(window.innerWidth < 1024) document.getElementById('my-drawer').checked = false;
         }
 
         async function atualizarDados() {
             const { count: aCount } = await _supabase.from('ordens_servico').select('*', { count: 'exact', head: true }).eq('status', 'Aberta');
             const { count: fCount } = await _supabase.from('ordens_servico').select('*', { count: 'exact', head: true }).eq('status', 'Finalizada');
+            const { data: finData } = await _supabase.from('financeiro').select('valor, tipo');
+            const { data: prodData } = await _supabase.from('produtos').select('estoque, estoque_minimo');
+
+            let saldo = 0; finData?.forEach(f => saldo += f.tipo === 'Entrada' ? parseFloat(f.valor) : -parseFloat(f.valor));
+            let estoqueAlerta = prodData?.filter(p => p.estoque <= p.estoque_minimo).length || 0;
 
             document.getElementById('dash-abertas').innerText = aCount || 0;
             document.getElementById('dash-finalizadas').innerText = fCount || 0;
-            
-            await carregarClientes(); await carregarOS();
+            document.getElementById('dash-saldo').innerText = `R$ ${saldo.toLocaleString('pt-BR', {minimumFractionDigits: 2})}`;
+            document.getElementById('dash-estoque').innerText = estoqueAlerta;
+
+            carregarClientes(); carregarOS(); carregarProdutos(); carregarFinanceiro();
         }
 
-        async function carregarClientes() {
-            const { data } = await _supabase.from('clientes').select('*').order('id', {ascending: false});
-            const lista = document.getElementById('lista-clientes'); lista.innerHTML = '';
-            data.forEach(c => {
-                lista.innerHTML += `<tr>
-                    <td class="text-xs font-black text-slate-400">#${c.id}</td>
-                    <td class="font-black text-slate-800">${c.nome}</td>
-                    <td>${c.whatsapp || '-'}</td>
-                    <td class="text-center flex justify-center gap-2">
-                        <button onclick="abrirEdicaoCliente(${c.id})" class="btn btn-xs border-slate-200 bg-slate-50 text-slate-600 font-bold hover:bg-slate-200">EDITAR</button>
-                        <button onclick="excluirCliente(${c.id})" class="btn btn-xs border-red-100 bg-red-50 text-red-500 font-bold hover:bg-red-100">EXCLUIR</button>
-                    </td></tr>`;
-            });
-            const sel = document.getElementById('os-cliente'); sel.innerHTML = '<option value="">Selecione o Cliente...</option>';
-            data.forEach(c => sel.innerHTML += `<option value="${c.id}">${c.nome}</option>`);
+        // MÓDULO PRODUTOS
+        function prepararNovoProduto() { document.getElementById('form-produto').reset(); document.getElementById('p-id').value = ""; modal_produto.showModal(); }
+        async function salvarProduto(e) { 
+            e.preventDefault(); 
+            const p = { 
+                nome: document.getElementById('p-nome').value, marca: document.getElementById('p-marca').value, categoria: document.getElementById('p-cat').value,
+                preco_custo: parseFloat(document.getElementById('p-custo').value || 0), preco_venda: parseFloat(document.getElementById('p-venda').value || 0),
+                estoque: parseInt(document.getElementById('p-estoque').value || 0), estoque_minimo: parseInt(document.getElementById('p-min').value || 5)
+            };
+            const id = document.getElementById('p-id').value;
+            if(id) await _supabase.from('produtos').update(p).eq('id', id); else await _supabase.from('produtos').insert([p]);
+            modal_produto.close(); atualizarDados();
         }
-
-        async function carregarOS() {
-            const { data } = await _supabase.from('ordens_servico').select('*, clientes(nome)').order('id', {ascending: false});
-            const lista = document.getElementById('lista-os'); lista.innerHTML = '';
-            data.forEach(os => {
-                const badge = os.status === 'Aberta' ? 'badge-aberta' : 'badge-finalizada';
-                lista.innerHTML += `<tr>
-                    <td class="font-black text-slate-800">#${os.id}</td>
-                    <td class="font-black text-xs uppercase">${os.clientes ? os.clientes.nome : 'N/A'}</td>
-                    <td>${os.equipamento}</td>
-                    <td><span onclick="alternarStatus(${os.id}, '${os.status}')" class="badge badge-lg ${badge} cursor-pointer hover:opacity-80">${os.status.toUpperCase()}</span></td>
-                    <td class="flex justify-center gap-2">
-                        <button onclick="abrirEdicaoOS(${os.id})" class="btn btn-xs bg-slate-100 text-slate-600 font-bold border-none">EDITAR</button>
-                        <button onclick="gerarPDF_OS(${os.id})" class="btn btn-xs bg-slate-900 text-white font-bold border-none">O.S</button>
-                        <button onclick="gerarPDF_Garantia(${os.id})" class="btn btn-xs btn-outline font-bold">GARANTIA</button>
-                    </td></tr>`;
+        async function carregarProdutos() {
+            const { data } = await _supabase.from('produtos').select('*').order('nome');
+            const lista = document.getElementById('lista-produtos'); lista.innerHTML = '';
+            data?.forEach(p => {
+                const alerta = p.estoque <= p.estoque_minimo ? 'text-red-600 font-black' : '';
+                lista.innerHTML += `<tr><td>#${p.id}</td><td class="font-bold">${p.nome}</td><td>${p.marca || '-'}</td><td class="${alerta}">${p.estoque}</td><td>R$ ${p.preco_venda}</td><td class="text-center"><button onclick="abrirEdicaoProduto(${p.id})" class="btn btn-xs bg-slate-100 border-none font-bold">EDITAR</button></td></tr>`;
             });
         }
-
-        async function alternarStatus(id, atual) {
-            const novo = atual === 'Aberta' ? 'Finalizada' : 'Aberta';
-            await _supabase.from('ordens_servico').update({ status: novo }).eq('id', id);
-            atualizarDados();
+        async function abrirEdicaoProduto(id) {
+            const { data: p } = await _supabase.from('produtos').select('*').eq('id', id).single();
+            document.getElementById('p-id').value = p.id; document.getElementById('p-nome').value = p.nome; document.getElementById('p-marca').value = p.marca;
+            document.getElementById('p-cat').value = p.categoria; document.getElementById('p-custo').value = p.preco_custo; document.getElementById('p-venda').value = p.preco_venda;
+            document.getElementById('p-estoque').value = p.estoque; document.getElementById('p-min').value = p.estoque_minimo;
+            modal_produto.showModal();
         }
 
-        function prepararNovoCliente() { document.getElementById('form-cliente').reset(); document.getElementById('c-id').value = ""; document.getElementById('titulo-modal-cliente').innerText = "Cadastro de Cliente"; modal_cliente.showModal(); }
-        async function abrirEdicaoCliente(id) { const { data: c } = await _supabase.from('clientes').select('*').eq('id', id).single(); document.getElementById('c-id').value = c.id; document.getElementById('c-nome').value = c.nome; document.getElementById('c-whatsapp').value = c.whatsapp || ''; document.getElementById('c-cpf').value = c.cpf_cnpj || ''; document.getElementById('c-email').value = c.email || ''; document.getElementById('c-cep').value = c.cep || ''; document.getElementById('c-cidade').value = c.cidade || ''; document.getElementById('c-rua').value = c.rua || ''; document.getElementById('c-numero').value = c.numero || ''; document.getElementById('titulo-modal-cliente').innerText = "Editar Cliente"; modal_cliente.showModal(); }
-        async function salvarCliente(e) { e.preventDefault(); const id = document.getElementById('c-id').value; const p = { nome: document.getElementById('c-nome').value, whatsapp: document.getElementById('c-whatsapp').value, cpf_cnpj: document.getElementById('c-cpf').value, email: document.getElementById('c-email').value, cep: document.getElementById('c-cep').value, cidade: document.getElementById('c-cidade').value, rua: document.getElementById('c-rua').value, numero: document.getElementById('c-numero').value }; if(id) await _supabase.from('clientes').update(p).eq('id', id); else await _supabase.from('clientes').insert([p]); modal_cliente.close(); atualizarDados(); }
-        async function excluirCliente(id) { if(confirm("Deseja excluir este cliente?")) { await _supabase.from('ordens_servico').delete().eq('cliente_id', id); await _supabase.from('clientes').delete().eq('id', id); atualizarDados(); } }
-
-        function prepararNovaOS() { document.getElementById('form-os').reset(); document.getElementById('os-id').value = ""; document.getElementById('titulo-modal-os').innerText = "Nova Ordem de Serviço"; modal_os.showModal(); }
-        async function abrirEdicaoOS(id) { const { data: os } = await _supabase.from('ordens_servico').select('*').eq('id', id).single(); document.getElementById('os-id').value = os.id; document.getElementById('os-cliente').value = os.cliente_id; document.getElementById('os-equipamento').value = os.equipamento; document.getElementById('os-defeito').value = os.defeito_relatado; document.getElementById('os-status-form').value = os.status; document.getElementById('os-valor').value = os.valor_total; document.getElementById('os-garantia').value = os.garantia_dias; document.getElementById('titulo-modal-os').innerText = `Editar O.S #${os.id}`; modal_os.showModal(); }
-        async function salvarOS(e) { e.preventDefault(); const id = document.getElementById('os-id').value; const p = { cliente_id: parseInt(document.getElementById('os-cliente').value), equipamento: document.getElementById('os-equipamento').value, defeito_relatado: document.getElementById('os-defeito').value, status: document.getElementById('os-status-form').value, valor_total: parseFloat(document.getElementById('os-valor').value || 0), garantia_dias: parseInt(document.getElementById('os-garantia').value || 90) }; if(id) await _supabase.from('ordens_servico').update(p).eq('id', id); else await _supabase.from('ordens_servico').insert([p]); modal_os.close(); atualizarDados(); }
-
-        // --- PDFS PROFISSIONAIS ---
-
-        async function gerarPDF_OS(id) {
-            const { data: os } = await _supabase.from('ordens_servico').select('*, clientes(*)').eq('id', id).single();
-            const { jsPDF } = window.jspdf;
-            const doc = new jsPDF();
-            
-            doc.setFillColor(179, 242, 77); doc.rect(0, 0, 210, 40, 'F');
-            doc.setTextColor(0); doc.setFontSize(24); doc.setFont(undefined, 'bold'); doc.text('ORDEM DE SERVIÇO', 105, 25, {align: 'center'});
-            doc.setFontSize(10); doc.setFont(undefined, 'normal');
-            doc.text(`Protocolo: #${os.id} | Data: ${new Date().toLocaleDateString()}`, 15, 50);
-            doc.line(15, 53, 195, 53);
-            doc.setFont(undefined, 'bold'); doc.text('CLIENTE:', 15, 62); doc.setFont(undefined, 'normal');
-            doc.text(`${os.clientes.nome} | Whats: ${os.clientes.whatsapp || '-'}`, 15, 68);
-            doc.setFont(undefined, 'bold'); doc.text('APARELHO:', 15, 80); doc.setFont(undefined, 'normal');
-            doc.text(`${os.equipamento}`, 15, 86);
-            doc.setFont(undefined, 'bold'); doc.text('DEFEITO RELATADO:', 15, 98); doc.setFont(undefined, 'normal');
-            doc.text(`${os.defeito_relatado}`, 15, 104, {maxWidth: 180});
-            doc.line(15, 115, 195, 115);
-            doc.setFontSize(12); doc.text(`VALOR TOTAL: R$ ${os.valor_total.toFixed(2)}`, 15, 125);
-            doc.text(`GARANTIA: ${os.garantia_dias} DIAS`, 195, 125, {align: 'right'});
-            doc.save(`OS_FIX_${os.id}.pdf`);
+        // MÓDULO FINANCEIRO
+        function abrirModalFin(tipo) { document.getElementById('form-financeiro').reset(); document.getElementById('fin-tipo').value = tipo; document.getElementById('fin-titulo').innerText = `Lançamento: ${tipo.toUpperCase()}`; modal_financeiro.showModal(); }
+        async function salvarFinanceiro(e) { 
+            e.preventDefault(); 
+            const p = { tipo: document.getElementById('fin-tipo').value, categoria: document.getElementById('fin-cat-manual').value, valor: parseFloat(document.getElementById('fin-valor').value), descricao: document.getElementById('fin-desc').value, metodo_pagamento: document.getElementById('fin-pag').value };
+            await _supabase.from('financeiro').insert([p]); modal_financeiro.close(); atualizarDados();
+        }
+        async function carregarFinanceiro() {
+            const { data } = await _supabase.from('financeiro').select('*').order('data', {ascending: false});
+            const lista = document.getElementById('lista-financeiro'); lista.innerHTML = '';
+            data?.forEach(f => {
+                const cor = f.tipo === 'Entrada' ? 'text-green-600' : 'text-red-600';
+                lista.innerHTML += `<tr class="text-xs"><td>${new Date(f.data).toLocaleDateString()}</td><td class="${cor} font-black">${f.tipo.toUpperCase()}</td><td class="font-bold">${f.categoria}</td><td class="${cor} font-black">R$ ${parseFloat(f.valor).toFixed(2)}</td><td>${f.descricao || '-'}</td></tr>`;
+            });
         }
 
-        async function gerarPDF_Garantia(id) {
-            const { data: os } = await _supabase.from('ordens_servico').select('*, clientes(*)').eq('id', id).single();
-            const doc = new jspdf.jsPDF();
-            
-            doc.setFillColor(249, 115, 22); doc.rect(0, 0, 210, 40, 'F'); // Laranja para Garantia
-            doc.setTextColor(255); doc.setFontSize(22); doc.setFont(undefined, 'bold'); doc.text('CERTIFICADO DE GARANTIA', 105, 25, {align: 'center'});
-            doc.setTextColor(0); doc.setFontSize(14);
-            doc.text(`A EletronicFix garante o reparo do equipamento:`, 15, 60);
-            doc.setFont(undefined, 'bold'); doc.text(`${os.equipamento}`, 15, 70); doc.setFont(undefined, 'normal');
-            doc.text(`Referente à O.S. #${os.id} para o cliente ${os.clientes.nome}.`, 15, 80);
-            doc.text(`Período de Garantia: ${os.garantia_dias} dias.`, 15, 95);
-            doc.setFontSize(10);
-            doc.text('Termos: A garantia cobre apenas o reparo efetuado. Danos físicos ou líquidos anulam a mesma.', 15, 115, {maxWidth: 180});
-            doc.save(`Garantia_FIX_${os.id}.pdf`);
-        }
+        // MÓDULO CLIENTE & O.S. (RESTAURADOS)
+        async function carregarClientes() { const { data } = await _supabase.from('clientes').select('*').order('id', {ascending: false}); const lista = document.getElementById('lista-clientes'); lista.innerHTML = ''; data?.forEach(c => { lista.innerHTML += `<tr><td class="text-xs font-bold text-slate-400">#${c.id}</td><td class="font-black text-slate-800 uppercase">${c.nome}</td><td>${c.whatsapp || '-'}</td><td class="text-center flex justify-center gap-2"><button onclick="abrirEdicaoCliente(${c.id})" class="btn btn-xs bg-slate-100 border-none font-bold">EDITAR</button></td></tr>`; }); const sel = document.getElementById('os-cliente'); sel.innerHTML = '<option value="">Selecione o Cliente...</option>'; data?.forEach(c => sel.innerHTML += `<option value="${c.id}">${c.nome}</option>`); }
+        function prepararNovoCliente() { document.getElementById('form-cliente').reset(); document.getElementById('c-id').value = ""; modal_cliente.showModal(); }
+        async function abrirEdicaoCliente(id) { const { data: c } = await _supabase.from('clientes').select('*').eq('id', id).single(); document.getElementById('c-id').value = c.id; document.getElementById('c-nome').value = c.nome; document.getElementById('c-whatsapp').value = c.whatsapp || ''; document.getElementById('c-cpf').value = c.cpf_cnpj || ''; document.getElementById('c-email').value = c.email || ''; document.getElementById('c-cep').value = c.cep || ''; document.getElementById('c-cidade').value = c.cidade || ''; document.getElementById('c-rua').value = c.rua || ''; document.getElementById('c-numero').value = c.numero || ''; document.getElementById('c-uf').value = c.uf || ''; modal_cliente.showModal(); }
+        async function salvarCliente(e) { e.preventDefault(); const id = document.getElementById('c-id').value; const p = { nome: document.getElementById('c-nome').value, whatsapp: document.getElementById('c-whatsapp').value, cpf_cnpj: document.getElementById('c-cpf').value, email: document.getElementById('c-email').value, cep: document.getElementById('c-cep').value, cidade: document.getElementById('c-cidade').value, rua: document.getElementById('c-rua').value, numero: document.getElementById('c-numero').value, uf: document.getElementById('c-uf').value }; if(id) await _supabase.from('clientes').update(p).eq('id', id); else await _supabase.from('clientes').insert([p]); modal_cliente.close(); atualizarDados(); }
 
-        async function buscarCep(c) { if(!c) return; const r = await fetch(`https://viacep.com.br/ws/${c.replace(/\D/g, '')}/json/`); const d = await r.json(); if(!d.erro) { document.getElementById('c-rua').value = d.logradouro; document.getElementById('c-cidade').value = d.localidade; } }
+        async function carregarOS() { const { data } = await _supabase.from('ordens_servico').select('*, clientes(nome)').order('id', {ascending: false}); const lista = document.getElementById('lista-os'); lista.innerHTML = ''; data?.forEach(os => { const badge = os.status === 'Aberta' ? 'badge-aberta' : 'badge-finalizada'; lista.innerHTML += `<tr><td class="font-bold text-slate-800">#${os.id}</td><td class="font-black text-xs uppercase">${os.clientes ? os.clientes.nome : 'N/A'}</td><td>${os.equipamento}</td><td><span onclick="alternarStatus(${os.id}, '${os.status}')" class="badge badge-lg ${badge} cursor-pointer hover:opacity-80 scale-90 uppercase">${os.status}</span></td><td class="flex justify-center gap-1"><button onclick="abrirEdicaoOS(${os.id})" class="btn btn-xs bg-slate-100 border-none font-bold">EDITAR</button><button onclick="gerarPDF_OS(${os.id})" class="btn btn-xs bg-slate-900 text-white border-none">O.S</button><button onclick="gerarPDF_Garantia(${os.id})" class="btn btn-xs btn-outline font-bold">GARANTIA</button></td></tr>`; }); }
+        async function prepararNovaOS() { document.getElementById('form-os').reset(); document.getElementById('os-id').value = ""; carregarClientes(); modal_os.showModal(); }
+        async function salvarOS(e) { e.preventDefault(); const id = document.getElementById('os-id').value; const valor = parseFloat(document.getElementById('os-valor').value || 0); const p = { cliente_id: parseInt(document.getElementById('os-cliente').value), equipamento: document.getElementById('os-equipamento').value, defeito_relatado: document.getElementById('os-defeito').value, status: document.getElementById('os-status-form').value, valor_total: valor, garantia_dias: parseInt(document.getElementById('os-garantia').value || 90) }; if(id) await _supabase.from('ordens_servico').update(p).eq('id', id); else { const { data: os } = await _supabase.from('ordens_servico').insert([p]).select().single(); if(valor > 0) await _supabase.from('financeiro').insert([{ tipo: 'Entrada', categoria: 'Manutenção', valor: valor, descricao: `Ref. O.S #${os.id} - ${p.equipamento}` }]); } modal_os.close(); atualizarDados(); }
+        async function abrirEdicaoOS(id) { const { data: os } = await _supabase.from('ordens_servico').select('*').eq('id', id).single(); document.getElementById('os-id').value = os.id; document.getElementById('os-cliente').value = os.cliente_id; document.getElementById('os-equipamento').value = os.equipamento; document.getElementById('os-defeito').value = os.defeito_relatado; document.getElementById('os-status-form').value = os.status; document.getElementById('os-valor').value = os.valor_total; document.getElementById('os-garantia').value = os.garantia_dias; modal_os.showModal(); }
+        async function alternarStatus(id, atual) { const novo = atual === 'Aberta' ? 'Finalizada' : 'Aberta'; await _supabase.from('ordens_servico').update({ status: novo }).eq('id', id); atualizarDados(); }
+
+        // PDFS PROFISSIONAIS
+        async function gerarPDF_OS(id) { const { data: os } = await _supabase.from('ordens_servico').select('*, clientes(*)').eq('id', id).single(); const doc = new jspdf.jsPDF(); doc.setFillColor(179, 242, 77); doc.rect(0, 0, 210, 40, 'F'); doc.setTextColor(0); doc.setFontSize(22); doc.text('ORDEM DE SERVIÇO', 105, 25, {align:'center'}); doc.setFontSize(10); doc.text(`Protocolo: #${os.id} | Data: ${new Date().toLocaleDateString()}`, 15, 50); doc.text(`Cliente: ${os.clientes.nome} | Aparelho: ${os.equipamento}`, 15, 60); doc.save(`OS_${os.id}.pdf`); }
+        async function gerarPDF_Garantia(id) { const { data: os } = await _supabase.from('ordens_servico').select('*, clientes(*)').eq('id', id).single(); const doc = new jspdf.jsPDF(); doc.setFillColor(249, 115, 22); doc.rect(0, 0, 210, 40, 'F'); doc.setTextColor(255); doc.setFontSize(22); doc.text('CERTIFICADO DE GARANTIA', 105, 25, {align:'center'}); doc.setTextColor(0); doc.setFontSize(12); doc.text(`A EletronicFix garante o reparo do equipamento ${os.equipamento} por ${os.garantia_dias} dias para o cliente ${os.clientes.nome}.`, 15, 60, {maxWidth: 180}); doc.save(`Garantia_${os.id}.pdf`); }
+        async function buscarCep(c) { if(!c) return; const r = await fetch(`https://viacep.com.br/ws/${c.replace(/\D/g,'')}/json/`); const d = await r.json(); if(!d.erro) { document.getElementById('c-rua').value = d.logradouro; document.getElementById('c-cidade').value = d.localidade; document.getElementById('c-uf').value = d.uf; } }
         
         window.onload = atualizarDados;
     </script>
